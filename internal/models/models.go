@@ -9,7 +9,7 @@ type Event struct {
 	ID      string
 	Title   string
 	EndDate time.Time
-	Label   string
+	Tags    []string
 	Markets []Market
 }
 
@@ -27,6 +27,6 @@ type Market struct {
 
 // I thought about moving outcomes and their chances to different struct in case there will be more outcomes and more outcome types, like in multi markets with tournament bets. Plus we might need new fileds if we want to iplement trading functional in future.
 type Outcome struct {
-	Outcome        string
-	OutcomeProcess float64
+	Outcome       string
+	OutcomePrices float64
 }
