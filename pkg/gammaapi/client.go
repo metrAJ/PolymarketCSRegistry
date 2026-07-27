@@ -24,6 +24,13 @@ type CSQueryParams struct {
 	EndDateMin time.Time `url:"end_date_min,omitempty"`
 }
 
+const (
+	isActive    = true
+	isNotClosed = false
+	cs2         = "Counter-strike-2"
+	cs2TagID    = "100639"
+)
+
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
@@ -73,4 +80,17 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 		return nil, fmt.Errorf("failed to map events: %w", err)
 	}
 	return events, nil
+}
+
+func (c *Client) GetCSEvents(ctx context.Context) ([]models.Event, error) {
+	active := isActive
+	closed := isNotClosed
+	params := CSQueryParams{
+		TagSlug:    cs2,
+		TagID:      cs2TagID,
+		Active:     &active,
+		Closed:     &closed,
+		EndDateMin: time.Now().UTC(),
+	}
+	return c.GetEvents(ctx, params)
 }

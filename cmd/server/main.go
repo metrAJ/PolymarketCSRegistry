@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 	"polymarket/internal/config"
+	"polymarket/internal/data"
+	scraper "polymarket/internal/services/scraper"
 	gamma "polymarket/pkg/gammaapi"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -30,29 +31,32 @@ func main() {
 	// logger.Info("Starting server on port:" + cfg.Port)
 	// log.Fatal(http.ListenAndServe(":"+cfg.Port, nil))
 
-	// gamma pkg test
-	client := gamma.NewClient(logger)
+	client := gamma.NewClient(logger)                 // GammaAPIClient
+	storage := data.NewStorage()                      // Storage
+	storageRepo := data.NewStorageRepository(storage) // StorageRepository
+	scraperService := scraper.NewScraperService(storageRepo, client)
 
-	active := true
-	closed := false
-	params := gamma.CSQueryParams{
-		TagSlug:    "Counter-strike-2",
-		TagID:      "100639",
-		Active:     &active,
-		Closed:     &closed,
-		EndDateMin: time.Now().UTC(),
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	scraperCtx := context.Background()
 
-	events, err := client.GetEvents(ctx, params)
+	// Raw functions use to check before making http endpoints
 
+	err = scraperService.ScrapeActiveEvents(scraperCtx)
 	if err != nil {
-		logger.Error("Failed to get events", zap.Error(err))
-		return
+		logger.Fatal("scraper service failed", zap.Error(err))
 	}
 
-	testJSON, _ := json.MarshalIndent(events[0], "", "  ")
-	fmt.Println(string(testJSON))
-
+	events, err := storageRepo.GetEvents(scraperCtx)
+	if err != nil {
+		logger.Fatal("failed to read from repository", zap.Error(err))
+	}
+	if len(events) > 0 {
+		eventJSON, marshalErr := json.MarshalIndent(events[0], "", "  ")
+		if marshalErr != nil {
+			logger.Error("failed to marshal event for debugging", zap.Error(marshalErr))
+		} else {
+			fmt.Println(string(eventJSON))
+		}
+	} else {
+		logger.Info("no active events found to print.")
+	}
 }
