@@ -1,16 +1,17 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"log"
+	"log/slog"
+	"net/http"
+	"os"
 	"polymarket/internal/config"
 	"polymarket/internal/data"
-	scraper "polymarket/internal/services/scraper"
+	event_service "polymarket/internal/services/event"
+	event_handler "polymarket/internal/services/event/transport"
+	scraper_service "polymarket/internal/services/scraper"
+	scraper_handler "polymarket/internal/services/scraper/transport"
 	gamma "polymarket/pkg/gammaapi"
-
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -20,43 +21,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal(err)
-	}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
 
 	if cfg.Port == "" {
 		cfg.Port = "3000"
 	}
-	// logger.Info("Starting server on port:" + cfg.Port)
-	// log.Fatal(http.ListenAndServe(":"+cfg.Port, nil))
 
-	client := gamma.NewClient(logger)                 // GammaAPIClient
-	storage := data.NewStorage()                      // Storage
-	storageRepo := data.NewStorageRepository(storage) // StorageRepository
-	scraperService := scraper.NewScraperService(storageRepo, client)
+	client := gamma.NewClient(logger)
+	storage := data.NewStorage()
+	storageRepo := data.NewStorageRepository(storage)
+	scraperService := scraper_service.NewScraperService(storageRepo, client)
+	eventService := event_service.NewEventService(storageRepo, logger)
+	eventHandler := event_handler.NewEventHandler(eventService, logger)
+	scraperHandler := scraper_handler.NewScraperHandler(scraperService, logger)
 
-	scraperCtx := context.Background()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/events", eventHandler.GetAllEvents)
+	mux.HandleFunc("POST /api/scrape", scraperHandler.ScrapeCSEvents)
 
-	// Raw functions use to check before making http endpoints
-
-	err = scraperService.ScrapeActiveEvents(scraperCtx)
-	if err != nil {
-		logger.Fatal("scraper service failed", zap.Error(err))
-	}
-
-	events, err := storageRepo.GetEvents(scraperCtx)
-	if err != nil {
-		logger.Fatal("failed to read from repository", zap.Error(err))
-	}
-	if len(events) > 0 {
-		eventJSON, marshalErr := json.MarshalIndent(events[0], "", "  ")
-		if marshalErr != nil {
-			logger.Error("failed to marshal event for debugging", zap.Error(marshalErr))
-		} else {
-			fmt.Println(string(eventJSON))
-		}
-	} else {
-		logger.Info("no active events found to print.")
+	logger.Info("Starting server", "port", cfg.Port)
+	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
+		logger.Error("Server failed to start", "error", err)
+		os.Exit(1)
 	}
 }

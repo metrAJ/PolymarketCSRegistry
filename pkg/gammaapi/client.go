@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"polymarket/internal/models"
 	"time"
 
 	"github.com/google/go-querystring/query"
-	"go.uber.org/zap"
 )
 
 const (
@@ -34,10 +34,10 @@ const (
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
-	logger     *zap.Logger
+	logger     *slog.Logger
 }
 
-func NewClient(logger *zap.Logger) *Client {
+func NewClient(logger *slog.Logger) *Client {
 	return &Client{
 		baseURL:    apiBaseURL,
 		httpClient: &http.Client{},
@@ -48,17 +48,19 @@ func NewClient(logger *zap.Logger) *Client {
 func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.Event, error) {
 	values, err := query.Values(params)
 	if err != nil {
+		c.logger.Error("pkg/client failed to build querry", "error", err)
 		return nil, err
 	}
 
 	request, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/events?"+values.Encode(), nil)
-
 	if err != nil {
+		c.logger.Error("pkg/client failed to create http request", "error", err)
 		return nil, err
 	}
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
+		c.logger.Error("pkg/client http request failed", "error", err)
 		return nil, err
 	}
 
@@ -67,16 +69,20 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 	}()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", response.StatusCode)
+		err := fmt.Errorf("unexpected status code: %d", response.StatusCode)
+		c.logger.Error("gamma api returned non-200 status", "status", response.StatusCode)
+		return nil, err
 	}
 
 	var eventDTOs []EventDTO
 	if err := json.NewDecoder(response.Body).Decode(&eventDTOs); err != nil {
+		c.logger.Error("failed to decode response body", "error", err)
 		return nil, err
 	}
 
 	events, err := mappedEvents(eventDTOs)
 	if err != nil {
+		c.logger.Error("failed to map event DTOs", "error", err)
 		return nil, fmt.Errorf("failed to map events: %w", err)
 	}
 	return events, nil
