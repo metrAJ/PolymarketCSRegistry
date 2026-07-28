@@ -12,7 +12,7 @@ linters:
     - gofumpt
     - govet
     - staticcheck
-    - wsl
+    - wsl_v5
     - stylecheck
     - revive
     - sloglint
