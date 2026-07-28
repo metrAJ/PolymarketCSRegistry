@@ -1,0 +1,19 @@
+linters-settings:
+  gofumpt:
+    extra-rules: true
+  wsl:
+    allow-assign-and-anything: false
+    allow-assign-and-call: false
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - gofumpt
+    - govet
+    - staticcheck
+    - wsl
+    - stylecheck
+    - revive
+    - sloglint
+    - misspell

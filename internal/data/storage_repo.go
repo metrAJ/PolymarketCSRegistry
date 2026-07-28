@@ -16,7 +16,7 @@ func NewStorageRepository(storage *Storage) *StorageRepository {
 	}
 }
 
-func (r *StorageRepository) SaveEvents(ctx context.Context, events []models.Event) error {
+func (r *StorageRepository) SaveEvents(_ context.Context, events []models.Event) error {
 	newEvents := make(map[string]models.Event, len(events))
 	for _, event := range events {
 		newEvents[event.ID] = event
@@ -28,7 +28,7 @@ func (r *StorageRepository) SaveEvents(ctx context.Context, events []models.Even
 	return nil
 }
 
-func (r *StorageRepository) GetEvents(ctx context.Context) ([]models.Event, error) {
+func (r *StorageRepository) GetEvents(_ context.Context) ([]models.Event, error) {
 	r.storage.mu.RLock()
 	defer r.storage.mu.RUnlock()
 	events := make([]models.Event, 0, len(r.storage.idMap))

@@ -9,7 +9,6 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-
 	return &Config{
 		Port: os.Getenv("PORT"),
 	}, nil

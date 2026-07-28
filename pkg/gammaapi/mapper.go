@@ -12,7 +12,6 @@ import (
 
 func mappedEvents(eventDTOs []EventDTO) ([]models.Event, error) {
 	events := make([]models.Event, 0, len(eventDTOs))
-
 	for _, dto := range eventDTOs {
 		domainEvent, err := dtoToModelEvent(dto)
 		if err != nil {
@@ -20,12 +19,10 @@ func mappedEvents(eventDTOs []EventDTO) ([]models.Event, error) {
 		}
 		events = append(events, domainEvent)
 	}
-
 	return events, nil
 }
 
 func dtoToModelEvent(dto EventDTO) (models.Event, error) {
-
 	endDate, err := parseTime(dto.EndDate)
 	if err != nil {
 		return models.Event{}, fmt.Errorf("failed to parse end date for event %s: %w", dto.ID, err)
@@ -67,8 +64,10 @@ func dtoToModelEvent(dto EventDTO) (models.Event, error) {
 }
 
 func parseOutcomes(outcomesJSON, outcomePricesJSON string) ([]models.Outcome, error) {
-	var names []string
-	var outcomePrices []string
+	var (
+		names         []string
+		outcomePrices []string
+	)
 
 	err := json.Unmarshal([]byte(outcomesJSON), &names)
 	if err != nil {
@@ -103,7 +102,6 @@ func parseTime(timeStr string) (time.Time, error) {
 	if timeStr == "" {
 		return time.Time{}, fmt.Errorf("empty time string")
 	}
-
 	layout := "2006-01-02 15:04:05-07"
 	t, err := time.Parse(layout, timeStr)
 	if err != nil {
