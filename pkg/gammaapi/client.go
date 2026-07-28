@@ -70,7 +70,9 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 
 	if response.StatusCode != http.StatusOK {
 		err := fmt.Errorf("unexpected status code: %d", response.StatusCode)
+
 		c.logger.Error("gamma api returned non-200 status", "status", response.StatusCode)
+
 		return nil, err
 	}
 
@@ -85,6 +87,7 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 		c.logger.Error("failed to map event DTOs", "error", err)
 		return nil, fmt.Errorf("failed to map events: %w", err)
 	}
+
 	return events, nil
 }
 
@@ -98,5 +101,6 @@ func (c *Client) GetCSEvents(ctx context.Context) ([]models.Event, error) {
 		Closed:     &closed,
 		EndDateMin: time.Now().UTC(),
 	}
+
 	return c.GetEvents(ctx, params)
 }

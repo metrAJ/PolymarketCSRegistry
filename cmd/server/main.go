@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
@@ -11,11 +12,14 @@ import (
 	event_handler "polymarket/internal/services/event/transport"
 	scraper_service "polymarket/internal/services/scraper"
 	scraper_handler "polymarket/internal/services/scraper/transport"
+	"polymarket/internal/worker"
 	gamma "polymarket/pkg/gammaapi"
+	"time"
 )
 
-func main() {
+const ScraperIntervalSec = 15
 
+func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -37,11 +41,16 @@ func main() {
 	eventHandler := event_handler.NewEventHandler(eventService, logger)
 	scraperHandler := scraper_handler.NewScraperHandler(scraperService, logger)
 
+	cronJob := worker.NewScraperWorker(scraperService, logger, ScraperIntervalSec*time.Second)
+	cronJob.Start(context.Background())
+	defer cronJob.Stop()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/events", eventHandler.GetAllEvents)
 	mux.HandleFunc("POST /api/scrape", scraperHandler.ScrapeCSEvents)
 
 	logger.Info("Starting server", "port", cfg.Port)
+
 	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
 		logger.Error("Server failed to start", "error", err)
 		os.Exit(1)

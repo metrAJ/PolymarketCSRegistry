@@ -28,5 +28,6 @@ func (s *EventService) GetAllEvents(ctx context.Context) ([]models.Event, error)
 		s.logger.Error("service/event failed to fetch events", "error", err)
 		return nil, err
 	}
+
 	return events, nil
 }
