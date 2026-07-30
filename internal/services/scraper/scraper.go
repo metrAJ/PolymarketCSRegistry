@@ -12,7 +12,7 @@ type StorageRepository interface {
 }
 
 type GammaAPIClient interface {
-	GetCSEvents(ctx context.Context) ([]models.Event, error)
+	GetAllCSEvents(ctx context.Context) ([]models.Event, error)
 }
 
 type ScraperService struct {
@@ -28,7 +28,7 @@ func NewScraperService(repo StorageRepository, api GammaAPIClient) *ScraperServi
 }
 
 func (s *ScraperService) ScrapeActiveEvents(ctx context.Context) error {
-	events, err := s.api.GetCSEvents(ctx)
+	events, err := s.api.GetAllCSEvents(ctx)
 	if err != nil {
 		return fmt.Errorf("service/scraper: failed to get events from API: %w", err)
 	}

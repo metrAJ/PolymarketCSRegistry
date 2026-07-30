@@ -22,6 +22,8 @@ type CSQueryParams struct {
 	Active     *bool     `url:"active,omitempty"`
 	Closed     *bool     `url:"closed,omitempty"`
 	EndDateMin time.Time `url:"end_date_min,omitempty"`
+	Limit      int       `url:"limit,omitempty"`
+	Offset     int       `url:"offset,omitempty"`
 }
 
 const (
@@ -29,6 +31,7 @@ const (
 	isNotClosed = false
 	cs2         = "Counter-strike-2"
 	cs2TagID    = "100639"
+	limit       = 100
 )
 
 type Client struct {
@@ -71,27 +74,27 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 	if response.StatusCode != http.StatusOK {
 		err := fmt.Errorf("unexpected status code: %d", response.StatusCode)
 
-		c.logger.Error("gamma api returned non-200 status", "status", response.StatusCode)
+		c.logger.Error("pkg/client returned non-200 status", "status", response.StatusCode)
 
 		return nil, err
 	}
 
 	var eventDTOs []EventDTO
 	if err := json.NewDecoder(response.Body).Decode(&eventDTOs); err != nil {
-		c.logger.Error("failed to decode response body", "error", err)
+		c.logger.Error("pkg/client failed to decode response body", "error", err)
 		return nil, err
 	}
 
 	events, err := mappedEvents(eventDTOs)
 	if err != nil {
-		c.logger.Error("failed to map event DTOs", "error", err)
-		return nil, fmt.Errorf("failed to map events: %w", err)
+		c.logger.Error("pkg/client failed to map event DTOs", "error", err)
+		return nil, fmt.Errorf("pkg/client failed to map events: %w", err)
 	}
 
 	return events, nil
 }
 
-func (c *Client) GetCSEvents(ctx context.Context) ([]models.Event, error) {
+func (c *Client) GetNCSEvents(ctx context.Context, N int) ([]models.Event, error) {
 	active := isActive
 	closed := isNotClosed
 	params := CSQueryParams{
@@ -100,7 +103,43 @@ func (c *Client) GetCSEvents(ctx context.Context) ([]models.Event, error) {
 		Active:     &active,
 		Closed:     &closed,
 		EndDateMin: time.Now().UTC(),
+		Limit:      N,
 	}
 
 	return c.GetEvents(ctx, params)
+}
+
+func (c *Client) GetAllCSEvents(ctx context.Context) ([]models.Event, error) {
+	active := isActive
+	closed := isNotClosed
+	offset := 0
+
+	var allEvents []models.Event
+
+	for {
+		params := CSQueryParams{
+			TagSlug:    cs2,
+			TagID:      cs2TagID,
+			Active:     &active,
+			Closed:     &closed,
+			EndDateMin: time.Now().UTC(),
+			Limit:      limit,
+			Offset:     offset,
+		}
+
+		events, err := c.GetEvents(ctx, params)
+		if err != nil {
+			c.logger.Error("pkg/client failed fetching paginated events", "error", err)
+			return nil, err
+		}
+
+		allEvents = append(allEvents, events...)
+		if len(events) < limit {
+			break
+		}
+
+		offset += limit
+	}
+
+	return allEvents, nil
 }
