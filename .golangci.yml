@@ -7,7 +7,7 @@ linters:
     - revive
     - sloglint
     - staticcheck
-    - wsl
+    - wsl_v5
   settings:
     wsl:
       allow-assign-and-call: false

@@ -2,35 +2,15 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
+	"polymarket/internal/client"
 	"runtime"
 	"strings"
 	"text/tabwriter"
 	"time"
 )
-
-type Event struct {
-	Title   string   `json:"title"`
-	EndDate string   `json:"endDate"`
-	Tags    []string `json:"tags"`
-	Markets []Market `json:"markets"`
-}
-
-type Market struct {
-	Question     string    `json:"question"`
-	VolumeNum    float64   `json:"volumeNum"`
-	LiquidityNum float64   `json:"liquidityNum"`
-	Outcomes     []Outcome `json:"outcomes"`
-}
-
-type Outcome struct {
-	Outcome       string  `json:"outcome"`
-	OutcomePrices float64 `json:"outcomePrices"`
-}
 
 func clearScreen() {
 	var cmd *exec.Cmd
@@ -47,23 +27,9 @@ func clearScreen() {
 func main() {
 	urlStr := "http://localhost:3000/api/events"
 
-	resp, err := http.Get(urlStr)
+	events, err := client.FetchEvents(urlStr)
 	if err != nil {
-		fmt.Printf("Error making GET request: %v\n", err)
-		return
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Error: non-200 status code: %d\n", resp.StatusCode)
-		return
-	}
-
-	var events []Event
-	if err := json.NewDecoder(resp.Body).Decode(&events); err != nil {
-		fmt.Fprintf(os.Stderr, "Error decoding JSON: %v\n", err)
-		return
+		fmt.Printf("Error fetching events: %v\n", err)
 	}
 
 	if len(events) == 0 {
