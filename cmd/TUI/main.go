@@ -7,9 +7,9 @@ import (
 	"polymarket/internal/client/ui"
 )
 
-func main() {
-	urlStr := "http://localhost:3000/api/events"
+const urlStr = "http://localhost:3000/api/events"
 
+func main() {
 	events, err := client.FetchEvents(urlStr)
 	if err != nil {
 		fmt.Printf("Error fetching events: %v\n", err)

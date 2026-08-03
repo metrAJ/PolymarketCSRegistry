@@ -10,19 +10,19 @@ type StorageRepository interface {
 	GetEvents(ctx context.Context) ([]models.Event, error)
 }
 
-type EventService struct {
+type Service struct {
 	repo   StorageRepository
 	logger *slog.Logger
 }
 
-func NewEventService(repo StorageRepository, logger *slog.Logger) *EventService {
-	return &EventService{
+func NewEventService(repo StorageRepository, logger *slog.Logger) *Service {
+	return &Service{
 		repo:   repo,
 		logger: logger,
 	}
 }
 
-func (s *EventService) GetAllEvents(ctx context.Context) ([]models.Event, error) {
+func (s *Service) GetAllEvents(ctx context.Context) ([]models.Event, error) {
 	events, err := s.repo.GetEvents(ctx)
 	if err != nil {
 		s.logger.Error("service/event failed to fetch events", "error", err)

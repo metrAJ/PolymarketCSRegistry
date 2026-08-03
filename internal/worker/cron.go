@@ -11,36 +11,36 @@ type ScraperService interface {
 }
 
 type ScraperWorker struct {
-	service  ScraperService
-	logger   *slog.Logger
-	interval time.Duration
-	stop     chan struct{}
+	service ScraperService
+	logger  *slog.Logger
+	stop    chan struct{}
 }
 
-func NewScraperWorker(service ScraperService, logger *slog.Logger, interval time.Duration) *ScraperWorker {
+func NewScraperWorker(service ScraperService, logger *slog.Logger) *ScraperWorker {
 	return &ScraperWorker{
-		service:  service,
-		logger:   logger,
-		interval: interval,
-		stop:     make(chan struct{}),
+		service: service,
+		logger:  logger,
+		stop:    make(chan struct{}),
 	}
 }
 
 func (w *ScraperWorker) scrape(ctx context.Context) {
 	if err := w.service.ScrapeActiveEvents(ctx); err != nil {
 		w.logger.Error("worker/cron failed to scrape active events", "error", err)
-	} else {
-		w.logger.Info("worker/cron successfully updated events")
+		return
 	}
+
+	w.logger.Info("worker/cron successfully updated events")
 }
 
-func (w *ScraperWorker) Start(ctx context.Context) {
-	w.logger.Info("woker/cron started", "interval", w.interval)
+func (w *ScraperWorker) Start(ctx context.Context, interval time.Duration) {
+	w.logger.Info("woker/cron started", "interval", interval)
 	w.scrape(ctx)
 
-	ticker := time.NewTicker(w.interval)
+	ticker := time.NewTicker(interval)
 
 	go func() {
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C: // Another scrape

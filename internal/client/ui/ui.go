@@ -32,14 +32,16 @@ func NewView() *View {
 	return v
 }
 
-func (v *View) setupComponents() { // Split screen on 2 parts
+// Split screen on 2 parts
+func (v *View) setupComponents() {
 	v.list.SetBorder(true).SetTitle(" Active Events ")
 	v.details.SetBorder(true).SetTitle(" Event Details ")
 
 	v.layout.AddItem(v.list, 0, 1, true).AddItem(v.details, 0, 2, false) // 1 to 2 proportion
 }
 
-func (v *View) setupKeybindings() { // Key capture
+// Key capture
+func (v *View) setupKeybindings() {
 	v.app.SetInputCapture(func(tcellEvent *tcell.EventKey) *tcell.EventKey {
 		switch tcellEvent.Key() {
 		case tcell.KeyTab: // Change focus between parts
@@ -77,13 +79,12 @@ func (v *View) LoadEvents(events []client.Event) {
 }
 
 func (v *View) renderDetails(event client.Event) {
-	var sb strings.Builder
-
 	endDate := event.EndDate
 	if t, err := time.Parse(time.RFC3339, event.EndDate); err == nil {
 		endDate = t.Format("Jan 02, 2006 15:04 UTC")
 	}
 
+	var sb strings.Builder
 	fmt.Fprintf(&sb, "[yellow]TITLE:[-] %s\n", event.Title)
 	fmt.Fprintf(&sb, "[yellow]CLOSES:[-] %s\n", endDate)
 	fmt.Fprintf(&sb, "[yellow]TAGS:[-] %s\n\n", strings.Join(event.Tags, ", "))

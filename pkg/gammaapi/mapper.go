@@ -14,7 +14,7 @@ func mappedEvents(eventDTOs []EventDTO) ([]models.Event, error) {
 	events := make([]models.Event, 0, len(eventDTOs))
 
 	for _, dto := range eventDTOs {
-		domainEvent, err := dtoToModelEvent(dto)
+		domainEvent, err := dto.ToDomainModel()
 		if err != nil {
 			return nil, fmt.Errorf("failed to map EventDTO to domain Event: %w", err)
 		}
@@ -25,7 +25,7 @@ func mappedEvents(eventDTOs []EventDTO) ([]models.Event, error) {
 	return events, nil
 }
 
-func dtoToModelEvent(dto EventDTO) (models.Event, error) {
+func (dto *EventDTO) ToDomainModel() (models.Event, error) {
 	endDate, err := parseTime(dto.EndDate)
 	if err != nil {
 		return models.Event{}, fmt.Errorf("failed to parse end date for event %s: %w", dto.ID, err)
@@ -71,9 +71,10 @@ func dtoToModelEvent(dto EventDTO) (models.Event, error) {
 }
 
 func parseOutcomes(outcomesJSON, outcomePricesJSON string) ([]models.Outcome, error) {
-	var names []string
-
-	var outcomePrices []string
+	var (
+		names         []string
+		outcomePrices []string
+	)
 
 	err := json.Unmarshal([]byte(outcomesJSON), &names)
 	if err != nil {

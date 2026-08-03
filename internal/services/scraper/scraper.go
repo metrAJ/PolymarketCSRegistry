@@ -20,7 +20,7 @@ type ScraperService struct {
 	api  GammaAPIClient
 }
 
-func NewScraperService(repo StorageRepository, api GammaAPIClient) *ScraperService {
+func NewService(repo StorageRepository, api GammaAPIClient) *ScraperService {
 	return &ScraperService{
 		repo: repo,
 		api:  api,
@@ -35,8 +35,7 @@ func (s *ScraperService) ScrapeActiveEvents(ctx context.Context) error {
 
 	activeEvents := s.filterActiveEvents(ctx, events)
 
-	err = s.repo.SaveEvents(ctx, activeEvents)
-	if err != nil {
+	if err := s.repo.SaveEvents(ctx, activeEvents); err != nil {
 		return fmt.Errorf("service/scraper: failed to save active events: %w", err)
 	}
 

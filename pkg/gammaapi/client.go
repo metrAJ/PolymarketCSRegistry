@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"polymarket/internal/models"
 	"time"
@@ -13,7 +12,12 @@ import (
 )
 
 const (
-	apiBaseURL = "https://gamma-api.polymarket.com"
+	apiBaseURL  = "https://gamma-api.polymarket.com"
+	isActive    = true
+	isNotClosed = false
+	cs2         = "Counter-strike-2"
+	cs2TagID    = "100639"
+	limit       = 100
 )
 
 type CSQueryParams struct {
@@ -26,45 +30,34 @@ type CSQueryParams struct {
 	Offset     int       `url:"offset,omitempty"`
 }
 
-const (
-	isActive    = true
-	isNotClosed = false
-	cs2         = "Counter-strike-2"
-	cs2TagID    = "100639"
-	limit       = 100
-)
-
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
-	logger     *slog.Logger
 }
 
-func NewClient(logger *slog.Logger) *Client {
+func NewClient() *Client {
 	return &Client{
-		baseURL:    apiBaseURL,
-		httpClient: &http.Client{},
-		logger:     logger,
+		baseURL: apiBaseURL,
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
 	}
 }
 
 func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.Event, error) {
 	values, err := query.Values(params)
 	if err != nil {
-		c.logger.Error("pkg/client failed to build querry", "error", err)
-		return nil, err
+		return nil, fmt.Errorf("pkg/client failed to build query: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/events?"+values.Encode(), nil)
 	if err != nil {
-		c.logger.Error("pkg/client failed to create http request", "error", err)
-		return nil, err
+		return nil, fmt.Errorf("pkg/client failed to create http request: %w", err)
 	}
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
-		c.logger.Error("pkg/client http request failed", "error", err)
-		return nil, err
+		return nil, fmt.Errorf("pkg/client http request failed: %w", err)
 	}
 
 	defer func() {
@@ -72,22 +65,16 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 	}()
 
 	if response.StatusCode != http.StatusOK {
-		err := fmt.Errorf("unexpected status code: %d", response.StatusCode)
-
-		c.logger.Error("pkg/client returned non-200 status", "status", response.StatusCode)
-
-		return nil, err
+		return nil, fmt.Errorf("unexpected status code: %d", response.StatusCode)
 	}
 
 	var eventDTOs []EventDTO
 	if err := json.NewDecoder(response.Body).Decode(&eventDTOs); err != nil {
-		c.logger.Error("pkg/client failed to decode response body", "error", err)
-		return nil, err
+		return nil, fmt.Errorf("pkg/client failed to decode response body: %w", err)
 	}
 
 	events, err := mappedEvents(eventDTOs)
 	if err != nil {
-		c.logger.Error("pkg/client failed to map event DTOs", "error", err)
 		return nil, fmt.Errorf("pkg/client failed to map events: %w", err)
 	}
 
@@ -112,9 +99,11 @@ func (c *Client) GetNCSEvents(ctx context.Context, N int) ([]models.Event, error
 func (c *Client) GetAllCSEvents(ctx context.Context) ([]models.Event, error) {
 	active := isActive
 	closed := isNotClosed
-	offset := 0
 
-	var allEvents []models.Event
+	var (
+		offset    = 0
+		allEvents []models.Event
+	)
 
 	for {
 		params := CSQueryParams{
@@ -129,8 +118,7 @@ func (c *Client) GetAllCSEvents(ctx context.Context) ([]models.Event, error) {
 
 		events, err := c.GetEvents(ctx, params)
 		if err != nil {
-			c.logger.Error("pkg/client failed fetching paginated events", "error", err)
-			return nil, err
+			return nil, fmt.Errorf("pkg/client failed fetching paginated events: %w", err)
 		}
 
 		allEvents = append(allEvents, events...)

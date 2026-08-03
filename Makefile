@@ -12,13 +12,13 @@ help:
 	@echo "	precomm			Run precommit check"
 
 run-tui:
-	go run .\cmd\tui\
+	go run ./cmd/tui/
 
 run-cli:
-	go run .\cmd\cli\
+	go run ./cmd/cli/
 
 run-server: 
-	go run .\cmd\server\
+	go run ./cmd/server/
 
 golint: 
 	golangci-lint run

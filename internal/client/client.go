@@ -38,7 +38,7 @@ func FetchEvents(url string) ([]Event, error) {
 
 	var events []Event
 	if err := json.NewDecoder(resp.Body).Decode(&events); err != nil {
-		return nil, fmt.Errorf("json decode failed: %w", err)
+		return nil, fmt.Errorf("json.Decode: %w", err)
 	}
 
 	return events, nil
