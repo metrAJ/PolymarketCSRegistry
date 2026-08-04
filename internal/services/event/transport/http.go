@@ -75,8 +75,6 @@ func NewEventHandler(service Service, logger *slog.Logger) *EventHandler {
 func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var responseDTOs []EventResponse
-
 	events, err := h.service.GetAllEvents(ctx)
 	if err != nil {
 		http.Error(w, "Could not get events", http.StatusInternalServerError)
@@ -84,6 +82,8 @@ func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	responseDTOs := make([]EventResponse, 0, len(events))
 
 	for _, event := range events {
 		responseDTOs = append(responseDTOs, toEventResponceDTO(event))
