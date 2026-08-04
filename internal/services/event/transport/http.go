@@ -56,16 +56,16 @@ func toEventResponceDTO(e models.Event) EventResponse {
 	}
 }
 
-type EventService interface {
+type Service interface {
 	GetAllEvents(ctx context.Context) ([]models.Event, error)
 }
 
 type EventHandler struct {
-	service EventService
+	service Service
 	logger  *slog.Logger
 }
 
-func NewEventHandler(service EventService, logger *slog.Logger) *EventHandler {
+func NewEventHandler(service Service, logger *slog.Logger) *EventHandler {
 	return &EventHandler{
 		service: service,
 		logger:  logger,
