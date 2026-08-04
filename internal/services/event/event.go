@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log/slog"
 	"polymarket/internal/models"
 )
 
@@ -11,21 +10,18 @@ type StorageRepository interface {
 }
 
 type Service struct {
-	repo   StorageRepository
-	logger *slog.Logger
+	repo StorageRepository
 }
 
-func NewEventService(repo StorageRepository, logger *slog.Logger) *Service {
+func NewEventService(repo StorageRepository) *Service {
 	return &Service{
-		repo:   repo,
-		logger: logger,
+		repo: repo,
 	}
 }
 
 func (s *Service) GetAllEvents(ctx context.Context) ([]models.Event, error) {
 	events, err := s.repo.GetEvents(ctx)
 	if err != nil {
-		s.logger.Error("service/event failed to fetch events", "error", err)
 		return nil, err
 	}
 

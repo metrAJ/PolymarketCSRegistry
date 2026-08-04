@@ -39,7 +39,7 @@ func main() {
 	storage := data.NewStorage()
 	storageRepo := data.NewStorageRepository(storage)
 	scraperService := scraper_service.NewService(storageRepo, client)
-	eventService := event_service.NewEventService(storageRepo, logger)
+	eventService := event_service.NewEventService(storageRepo)
 	eventHandler := event_handler.NewEventHandler(eventService, logger)
 	scraperHandler := scraper_handler.NewScraperHandler(scraperService, logger)
 
