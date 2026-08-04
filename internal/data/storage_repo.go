@@ -38,5 +38,6 @@ func (r *StorageRepository) GetEvents(_ context.Context) ([]models.Event, error)
 	defer r.storage.mu.RUnlock()
 
 	events := slices.Collect(maps.Values(r.storage.idMap))
+
 	return events, nil
 }

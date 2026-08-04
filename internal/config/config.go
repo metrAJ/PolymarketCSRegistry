@@ -13,6 +13,7 @@ func LoadConfig() (*Config, error) {
 	if port == "" {
 		port = "3000"
 	}
+
 	return &Config{
 		Port: port,
 	}, nil

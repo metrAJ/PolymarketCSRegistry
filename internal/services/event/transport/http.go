@@ -81,12 +81,14 @@ func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Could not get events", http.StatusInternalServerError)
 		h.logger.Error("service/event/transport failed to fetch events from service", "error", err)
+
 		return
 	}
 
 	for _, event := range events {
 		responseDTOs = append(responseDTOs, toEventResponceDTO(event))
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(responseDTOs); err != nil {

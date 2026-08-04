@@ -7,12 +7,6 @@ repos:
         language: system
         pass_filenames: false
         
-      - id: go-vet
-        name: go vet
-        entry: go vet ./...
-        language: system
-        pass_filenames: false
-        
       - id: go-mod-tidy
         name: go mod tidy
         entry: go mod tidy

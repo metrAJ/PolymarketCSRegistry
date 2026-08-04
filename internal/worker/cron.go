@@ -41,6 +41,7 @@ func (w *ScraperWorker) Start(ctx context.Context, interval time.Duration) {
 
 	go func() {
 		defer ticker.Stop()
+
 		for {
 			select {
 			case <-ticker.C: // Another scrape

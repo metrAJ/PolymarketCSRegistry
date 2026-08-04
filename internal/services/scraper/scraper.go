@@ -15,19 +15,19 @@ type GammaAPIClient interface {
 	GetAllCSEvents(ctx context.Context) ([]models.Event, error)
 }
 
-type ScraperService struct {
+type Service struct {
 	repo StorageRepository
 	api  GammaAPIClient
 }
 
-func NewService(repo StorageRepository, api GammaAPIClient) *ScraperService {
-	return &ScraperService{
+func NewService(repo StorageRepository, api GammaAPIClient) *Service {
+	return &Service{
 		repo: repo,
 		api:  api,
 	}
 }
 
-func (s *ScraperService) ScrapeActiveEvents(ctx context.Context) error {
+func (s *Service) ScrapeActiveEvents(ctx context.Context) error {
 	events, err := s.api.GetAllCSEvents(ctx)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (s *ScraperService) ScrapeActiveEvents(ctx context.Context) error {
 	return nil
 }
 
-func (s *ScraperService) filterActiveEvents(_ context.Context, events []models.Event) []models.Event {
+func (s *Service) filterActiveEvents(_ context.Context, events []models.Event) []models.Event {
 	activeEvents := make([]models.Event, 0, len(events))
 
 	for _, event := range events {
