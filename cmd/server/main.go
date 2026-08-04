@@ -32,10 +32,6 @@ func main() {
 		Level: slog.LevelInfo,
 	}))
 
-	if cfg.Port == "" {
-		cfg.Port = "3000"
-	}
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
