@@ -1,4 +1,4 @@
-# Polymarket CS2 Active markets registry
+# Polymarket CS2 Active Markets Registry
 
 Back-end server to scrape and compose active markets related to CS2 team matches. Plus CLI and TUI apps to get the feed.
 
@@ -60,7 +60,7 @@ The project includes basic CLI and TUI apps for navigation through events and ma
 Shows 1 event at a time. Change events by pressing ENTER.
 <img width="742" height="598" alt="image" src="https://github.com/user-attachments/assets/f34b422f-d8fa-485e-98e9-c3193b1bbfe7" />
 
-## TUI
+### TUI
 
 Shows all events as a navigation list and their markets in the right window. Navigate with arrows and TAB ot by mouse.
 <img width="1379" height="379" alt="image" src="https://github.com/user-attachments/assets/7ecdc174-e47f-452b-b86f-a3541ca16a00" />
