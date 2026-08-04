@@ -1,9 +1,11 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type Event struct {
@@ -25,8 +27,17 @@ type Outcome struct {
 	OutcomePrices float64 `json:"outcomePrices"`
 }
 
-func FetchEvents(url string) ([]Event, error) {
-	resp, err := http.Get(url)
+func FetchEvents(ctx context.Context, url string) ([]Event, error) {
+	httpClient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("http get failed: %w", err)
+	}
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("http get failed: %w", err)
 	}

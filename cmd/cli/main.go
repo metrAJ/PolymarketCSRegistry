@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"polymarket/internal/client"
@@ -10,7 +11,7 @@ import (
 const urlStr = "http://localhost:3000/api/events"
 
 func main() {
-	events, err := client.FetchEvents(urlStr)
+	events, err := client.FetchEvents(context.Background(), urlStr)
 	if err != nil {
 		fmt.Printf("Error fetching events: %v\n", err)
 		os.Exit(1)

@@ -9,13 +9,14 @@ type EventDTO struct {
 }
 
 type MarketDTO struct {
-	ID              string  `json:"id"`
-	Question        string  `json:"question"`
-	EndDate         string  `json:"endDate"`
-	GameStartTime   string  `json:"gameStartTime"`
-	AcceptingOrders bool    `json:"acceptingOrders"`
-	VolumeNum       float64 `json:"volumeNum"`
-	LiquidityNum    float64 `json:"liquidityNum"`
+	ID                  string  `json:"id"`
+	Question            string  `json:"question"`
+	EndDate             string  `json:"endDate"`
+	GameStartTime       string  `json:"gameStartTime"`
+	AcceptingOrders     bool    `json:"acceptingOrders"`
+	VolumeNum           float64 `json:"volumeNum"`
+	LiquidityNum        float64 `json:"liquidityNum"`
+	UmaResolutionStatus string  `json:"umaResolutionStatus"`
 
 	Outcomes      string `json:"outcomes"`
 	OutcomePrices string `json:"outcomePrices"`

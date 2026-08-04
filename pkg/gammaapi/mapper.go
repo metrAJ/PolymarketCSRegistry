@@ -5,16 +5,17 @@ package gamma
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"polymarket/internal/models"
 	"strconv"
 	"time"
 )
 
-func mappedEvents(eventDTOs []EventDTO) ([]models.Event, error) {
+func mappedEvents(eventDTOs []EventDTO, logger *slog.Logger) ([]models.Event, error) {
 	events := make([]models.Event, 0, len(eventDTOs))
 
 	for _, dto := range eventDTOs {
-		domainEvent, err := dto.ToDomainModel()
+		domainEvent, err := dto.ToDomainModel(logger)
 		if err != nil {
 			return nil, fmt.Errorf("failed to map EventDTO to domain Event: %w", err)
 		}
@@ -25,7 +26,7 @@ func mappedEvents(eventDTOs []EventDTO) ([]models.Event, error) {
 	return events, nil
 }
 
-func (dto *EventDTO) ToDomainModel() (models.Event, error) {
+func (dto *EventDTO) ToDomainModel(logger *slog.Logger) (models.Event, error) {
 	endDate, err := parseTime(dto.EndDate)
 	if err != nil {
 		return models.Event{}, fmt.Errorf("failed to parse end date for event %s: %w", dto.ID, err)
@@ -42,28 +43,32 @@ func (dto *EventDTO) ToDomainModel() (models.Event, error) {
 	for _, m := range dto.Markets {
 		outcomes, err := parseOutcomes(m.Outcomes, m.OutcomePrices)
 		if err != nil {
-			return models.Event{}, fmt.Errorf("failed to parse outcomes for market %s: %w", m.ID, err)
+			logger.Error("Failed to parse outcomes", "market", m.ID, "error", err)
+			continue
 		}
 
 		endDate, err := parseTime(m.EndDate)
 		if err != nil {
-			return models.Event{}, fmt.Errorf("failed to parse end date for market %s: %w", m.ID, err)
+			logger.Error("Failed to parse end date", "market", m.ID, "error", err)
+			continue
 		}
 
 		gameStartTime, err := parseTime(m.GameStartTime)
 		if err != nil {
-			return models.Event{}, fmt.Errorf("failed to parse game start time for market %s: %w", m.ID, err)
+			logger.Error("Failed to parse  game start time", "market", m.ID, "error", err)
+			continue
 		}
 
 		modelEvent.Markets = append(modelEvent.Markets, models.Market{
-			ID:              m.ID,
-			Question:        m.Question,
-			EndDate:         endDate,
-			GameStartTime:   gameStartTime,
-			AcceptingOrders: m.AcceptingOrders,
-			VolumeNum:       m.VolumeNum,
-			LiquidityNum:    m.LiquidityNum,
-			Outcomes:        outcomes,
+			ID:                  m.ID,
+			Question:            m.Question,
+			EndDate:             endDate,
+			GameStartTime:       gameStartTime,
+			AcceptingOrders:     m.AcceptingOrders,
+			VolumeNum:           m.VolumeNum,
+			LiquidityNum:        m.LiquidityNum,
+			Outcomes:            outcomes,
+			UmaResolutionStatus: m.UmaResolutionStatus,
 		})
 	}
 

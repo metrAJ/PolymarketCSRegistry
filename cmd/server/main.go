@@ -39,7 +39,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	client := gamma.NewClient()
+	client := gamma.NewClient(logger)
 	storage := data.NewStorage()
 	storageRepo := data.NewStorageRepository(storage)
 	scraperService := scraper_service.NewService(storageRepo, client)

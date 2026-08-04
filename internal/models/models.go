@@ -15,14 +15,15 @@ type Event struct {
 
 // Market struct, will contain all necessary for us info about markets
 type Market struct {
-	ID              string
-	Question        string
-	EndDate         time.Time
-	Outcomes        []Outcome
-	GameStartTime   time.Time
-	AcceptingOrders bool
-	VolumeNum       float64
-	LiquidityNum    float64
+	ID                  string
+	Question            string
+	EndDate             time.Time
+	Outcomes            []Outcome
+	GameStartTime       time.Time
+	AcceptingOrders     bool
+	VolumeNum           float64
+	LiquidityNum        float64
+	UmaResolutionStatus string
 }
 
 // I thought about moving outcomes and their chances to different struct in case there will be more outcomes and more outcome types, like in multi markets with tournament bets. Plus we might need new fileds if we want to iplement trading functional in future.

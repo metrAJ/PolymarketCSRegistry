@@ -2,7 +2,9 @@ package data
 
 import (
 	"context"
+	"maps"
 	"polymarket/internal/models"
+	"slices"
 	"time"
 )
 
@@ -35,10 +37,6 @@ func (r *StorageRepository) GetEvents(_ context.Context) ([]models.Event, error)
 	r.storage.mu.RLock()
 	defer r.storage.mu.RUnlock()
 
-	events := make([]models.Event, 0, len(r.storage.idMap))
-	for _, event := range r.storage.idMap {
-		events = append(events, event)
-	}
-
+	events := slices.Collect(maps.Values(r.storage.idMap))
 	return events, nil
 }

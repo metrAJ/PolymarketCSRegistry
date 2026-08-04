@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"polymarket/internal/models"
 	"time"
@@ -12,12 +13,10 @@ import (
 )
 
 const (
-	apiBaseURL  = "https://gamma-api.polymarket.com"
-	isActive    = true
-	isNotClosed = false
-	cs2         = "Counter-strike-2"
-	cs2TagID    = "100639"
-	limit       = 100
+	apiBaseURL = "https://gamma-api.polymarket.com"
+	cs2        = "Counter-strike-2"
+	cs2TagID   = "100639"
+	limit      = 100
 )
 
 type CSQueryParams struct {
@@ -33,14 +32,16 @@ type CSQueryParams struct {
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
+	logger     *slog.Logger
 }
 
-func NewClient() *Client {
+func NewClient(logger *slog.Logger) *Client {
 	return &Client{
 		baseURL: apiBaseURL,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		logger: logger,
 	}
 }
 
@@ -73,7 +74,7 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 		return nil, fmt.Errorf("pkg/client failed to decode response body: %w", err)
 	}
 
-	events, err := mappedEvents(eventDTOs)
+	events, err := mappedEvents(eventDTOs, c.logger)
 	if err != nil {
 		return nil, fmt.Errorf("pkg/client failed to map events: %w", err)
 	}
@@ -82,13 +83,11 @@ func (c *Client) GetEvents(ctx context.Context, params CSQueryParams) ([]models.
 }
 
 func (c *Client) GetNCSEvents(ctx context.Context, N int) ([]models.Event, error) {
-	active := isActive
-	closed := isNotClosed
 	params := CSQueryParams{
 		TagSlug:    cs2,
 		TagID:      cs2TagID,
-		Active:     &active,
-		Closed:     &closed,
+		Active:     new(true),
+		Closed:     new(false),
 		EndDateMin: time.Now().UTC(),
 		Limit:      N,
 	}
@@ -97,9 +96,6 @@ func (c *Client) GetNCSEvents(ctx context.Context, N int) ([]models.Event, error
 }
 
 func (c *Client) GetAllCSEvents(ctx context.Context) ([]models.Event, error) {
-	active := isActive
-	closed := isNotClosed
-
 	var (
 		offset    = 0
 		allEvents []models.Event
@@ -109,8 +105,8 @@ func (c *Client) GetAllCSEvents(ctx context.Context) ([]models.Event, error) {
 		params := CSQueryParams{
 			TagSlug:    cs2,
 			TagID:      cs2TagID,
-			Active:     &active,
-			Closed:     &closed,
+			Active:     new(true),
+			Closed:     new(false),
 			EndDateMin: time.Now().UTC(),
 			Limit:      limit,
 			Offset:     offset,
@@ -118,7 +114,7 @@ func (c *Client) GetAllCSEvents(ctx context.Context) ([]models.Event, error) {
 
 		events, err := c.GetEvents(ctx, params)
 		if err != nil {
-			return nil, fmt.Errorf("pkg/client failed fetching paginated events: %w", err)
+			return nil, err
 		}
 
 		allEvents = append(allEvents, events...)
