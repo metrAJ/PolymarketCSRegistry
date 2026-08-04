@@ -46,7 +46,6 @@ func main() {
 	cronJob := worker.NewScraperWorker(scraperService, logger)
 
 	cronJob.Start(ctx, ScraperIntervalSec*time.Second)
-	defer cronJob.Stop()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/events", eventHandler.GetAllEvents)
